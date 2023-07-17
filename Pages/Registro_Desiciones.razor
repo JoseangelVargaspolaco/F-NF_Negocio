@@ -5,8 +5,8 @@
 
 @if (currentQuestionIndex < preguntas.Count)
 {
-    <h4>@preguntas[currentQuestionIndex].Preguntas</h4>
-    <div class="form-group">
+    <h4 class="animate__animated animate__fadeIn">@preguntas[currentQuestionIndex].Preguntas</h4>
+    <div class="form-group animate__animated animate__fadeIn">
         <div class="form-check">
             <input class="form-check-input" type="radio" name="respuesta" id="respuestaSi" value="true" checked="@(preguntas[currentQuestionIndex].Respuestas)">
             <label class="form-check-label" for="respuestaSi">
@@ -22,31 +22,34 @@
     </div>
     @if (preguntas[currentQuestionIndex].Respuestas)
     {
-        <div class="form-group">
+        <div class="form-group animate__animated animate__fadeIn">
             <label for="explicacion">Explicación:</label>
             <textarea class="form-control" id="explicacion" rows="3" @bind="@preguntas[currentQuestionIndex].Explicacion"></textarea>
         </div>
     }
-    <div>
+    <div class="animate__animated animate__fadeIn">
         <button class="btn btn-primary" @onclick="() => ResponderPregunta(true)">Responder</button>
     </div>
 }
 else
 {
-    <h4>El negocio es @ObtenerFactibilidadNegocio().</h4>
-}
+    <h4 class="animate__animated animate__fadeIn">El negocio es @ObtenerFactibilidadNegocio().</h4>
 
-<div class="mt-3">
-    <h5>Agregar nueva pregunta:</h5>
-    <div class="input-group">
-        <input class="form-control" @bind="@nuevaPregunta" />
-        <div class="input-group-append">
-            <button class="btn btn-primary" @onclick="AgregarNuevaPregunta">Agregar</button>
+    <div class="mt-3">
+        <h5 class="animate__animated animate__fadeIn">Agregar nueva pregunta:</h5>
+        <div class="input-group animate__animated animate__fadeIn">
+            <input class="form-control" @bind="@nuevaPregunta" />
+            <div class="input-group-append">
+                <button class="btn btn-primary" @onclick="AgregarNuevaPregunta">Agregar</button>
+            </div>
         </div>
     </div>
-</div>
+    <div class="mt-3">
+        <button class="btn btn-secondary" @onclick="GuardarPreguntas">Guardar preguntas</button>
+    </div>
+}
 
-<button class="btn btn-secondary mt-3" @onclick="Reiniciar">Reiniciar</button>
+<button class="btn btn-secondary mt-3 animate__animated animate__fadeIn" @onclick="Reiniciar">Reiniciar</button>
 
 @code {
     [Parameter]
@@ -85,20 +88,13 @@ else
     private void ResponderPregunta(bool respuesta)
     {
         preguntas[currentQuestionIndex].Respuestas = respuesta;
-        currentQuestionIndex++;
 
-        if (currentQuestionIndex >= preguntas.Count)
+        // Agregar animación al cambiar de pregunta
+        currentQuestionIndex++;
+        if (currentQuestionIndex < preguntas.Count)
         {
-            esFactible = CalcularFactibilidadNegocio();
-            bool guardo = negocioWordBLL.Guardar(preguntasR);
-            if (guardo)
-            {
-                // Aquí puedes realizar alguna acción adicional después de guardar exitosamente los datos
-            }
-            else
-            {
-                // Aquí puedes manejar una situación en la que no se pudo guardar los datos correctamente
-            }
+            preguntas[currentQuestionIndex].Respuestas = false;
+            preguntas[currentQuestionIndex].Explicacion = string.Empty;
         }
     }
 
@@ -131,6 +127,14 @@ else
         {
             preguntas.Add(new Preguntas_Respuestas { Preguntas = nuevaPregunta });
             nuevaPregunta = string.Empty;
+        }
+    }
+
+    private void GuardarPreguntas()
+    {
+        foreach (var pregunta in preguntas)
+        {
+            bool guardo = negocioWordBLL.Guardar(pregunta);
         }
     }
 }

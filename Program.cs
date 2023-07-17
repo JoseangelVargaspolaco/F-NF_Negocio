@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using F_NF_Negocio.DAL;
 using F_NF_Negocio.BLL;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 builder.Services.AddScoped<Negocio_Word_BLL>();
+builder.Services.AddScoped<NotificationService>();
 
 
 var app = builder.Build();

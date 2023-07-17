@@ -37,8 +37,7 @@ namespace F_NF_Negocio.BLL
 
         public bool Guardar(Preguntas_Respuestas preguntas_respuestas)
         {
-
-            if (!Existe(preguntas_respuestas.PreguntaR_ID))
+            if (preguntas_respuestas.PreguntaR_ID == 0)
                 return Insertar(preguntas_respuestas);
             else
                 return Modificar(preguntas_respuestas);
@@ -50,10 +49,8 @@ namespace F_NF_Negocio.BLL
 
             try
             {
-                if (contexto.Preguntas_Respuestas.Add(preguntas_respuestas) != null)
-                {
-                    Insertado = contexto.SaveChanges() > 0;
-                }
+                contexto.Preguntas_Respuestas.Add(preguntas_respuestas);
+                Insertado = contexto.SaveChanges() > 0;
             }
             catch (Exception)
             {
@@ -64,25 +61,24 @@ namespace F_NF_Negocio.BLL
 
         private bool Modificar(Preguntas_Respuestas preguntas_respuestas)
         {
-            bool Insertado = false;
+            bool Modificado = false;
 
             try
             {
                 contexto.Entry(preguntas_respuestas).State = EntityState.Modified;
-                Insertado = contexto.SaveChanges() > 0;
+                Modificado = contexto.SaveChanges() > 0;
             }
             catch (Exception)
             {
                 throw;
             }
-            return Insertado;
+            return Modificado;
         }
 
         public Preguntas_Respuestas Buscar(int id)
         {
             return contexto.Preguntas_Respuestas
-                .Where(a => a.PreguntaR_ID == id == true && a.Estado == true)
-                .SingleOrDefault();
+                .SingleOrDefault(a => a.PreguntaR_ID == id && a.Estado == true);
         }
 
         public bool Eliminar(int id)
