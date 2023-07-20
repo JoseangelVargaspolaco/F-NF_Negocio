@@ -1,140 +1,198 @@
 ﻿@page "/"
-@inject Negocio_Word_BLL negocioWordBLL
 
-<h3>Factibilidad del negocio</h3>
+@using System.Collections.Generic
+@inject IEncuestaService encuestaService
 
-@if (currentQuestionIndex < preguntas.Count)
+<h3 >Encuesta</h3>
+
+@if (preguntas.Count > 0 && preguntaActual < preguntas.Count)
 {
-    <h4 class="animate__animated animate__fadeIn">@preguntas[currentQuestionIndex].Preguntas</h4>
-    <div class="form-group animate__animated animate__fadeIn">
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="respuesta" id="respuestaSi" value="true" checked="@(preguntas[currentQuestionIndex].Respuestas)">
-            <label class="form-check-label" for="respuestaSi">
-                Sí
-            </label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="respuesta" id="respuestaNo" value="false" checked="@(preguntas[currentQuestionIndex].Respuestas == false)">
-            <label class="form-check-label" for="respuestaNo">
-                No
-            </label>
-        </div>
-    </div>
-    @if (preguntas[currentQuestionIndex].Respuestas)
-    {
-        <div class="form-group animate__animated animate__fadeIn">
-            <label for="explicacion">Explicación:</label>
-            <textarea class="form-control" id="explicacion" rows="3" @bind="@preguntas[currentQuestionIndex].Explicacion"></textarea>
-        </div>
-    }
-    <div class="animate__animated animate__fadeIn">
-        <button class="btn btn-primary" @onclick="() => ResponderPregunta(true)">Responder</button>
-    </div>
-}
-else
-{
-    <h4 class="animate__animated animate__fadeIn">El negocio es @ObtenerFactibilidadNegocio().</h4>
+    <h4>Pregunta @preguntaActual: @preguntas[preguntaActual].Enunciado</h4>
+    <div>
+        @for (int i = 0; i < preguntas[preguntaActual].Opciones.Count; i++)
+        {
+            var opcion = preguntas[preguntaActual].Opciones[i];
+            var isSelected = preguntas[preguntaActual].OpcionesSeleccionadas.Any(o => o.Opcion == opcion && o.Seleccionada);
 
-    <div class="mt-3">
-        <h5 class="animate__animated animate__fadeIn">Agregar nueva pregunta:</h5>
-        <div class="input-group animate__animated animate__fadeIn">
-            <input class="form-control" @bind="@nuevaPregunta" />
-            <div class="input-group-append">
-                <button class="btn btn-primary" @onclick="AgregarNuevaPregunta">Agregar</button>
+            <div class="form-check">
+                <input type="radio" name="respuestaActual" value="@opcion" @onchange="() => ResponderPregunta(preguntas[preguntaActual], opcion)" checked="@isSelected" />
+                <label class="form-check-label">@opcion</label>
             </div>
-        </div>
+        }
     </div>
-    <div class="mt-3">
-        <button class="btn btn-secondary" @onclick="GuardarPreguntas">Guardar preguntas</button>
-    </div>
+    <hr />
+    <button class="btn btn-primary" @onclick="SiguientePregunta">Siguiente</button>
+}
+else if (preguntaActual == preguntas.Count)
+{
+    <h4>Resultado:</h4>
+    <p>Porcentaje de factibilidad: @CalcularPorcentajeFactibilidad()%</p>
+    <p>El negocio es @CalcularFactibilidadNegocio().</p>
 }
 
-<button class="btn btn-secondary mt-3 animate__animated animate__fadeIn" @onclick="Reiniciar">Reiniciar</button>
 
 @code {
-    [Parameter]
-    public int PreguntaR_ID { get; set; }
 
-    private List<Preguntas_Respuestas> preguntas;
-    private Preguntas_Respuestas preguntasR = new Preguntas_Respuestas();
-    private int currentQuestionIndex;
-    private bool esFactible;
-    private string nuevaPregunta;
-
-    protected override void OnInitialized()
+    private int preguntaActual = 0;
+    private List<Preguntas> preguntas = new List<Preguntas>
     {
-        InicializarPreguntas();
-        Reiniciar();
-        if (PreguntaR_ID > 0)
+        new Preguntas
         {
-            preguntasR.PreguntaR_ID = PreguntaR_ID;
+            Enunciado = "¿Quienes son?",
+            Opciones = new List<string> { "Socios estratégicos", "Proveedores", "Clientes", "Empleados" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Quiénes le ofrecen servicios y recursos estratégicos?",
+            Opciones = new List<string> { "Proveedores de materias primas", "Aliados estratégicos", "Inversionistas" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué actividades internas podrían subcontratarse para bajar costos y mejorar la calidad?",
+            Opciones = new List<string> { "Producción", "Logística", "Servicio al cliente" }
+        },
+        new Preguntas
+        {
+            Enunciado = "Actividades claves ¿Cuáles son las actividades y los procesos clave en su modelo de negocios?",
+            Opciones = new List<string> { "Investigación y desarrollo", "Producción", "Marketing y ventas", "Servicio al cliente" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Cuáles son los recursos clave y más costosos en su modelo de negocios?",
+            Opciones = new List<string> { "Tecnología", "Personal calificado", "Maquinaria y equipo", "Capital" }
+        },
+        new Preguntas
+        {
+            Enunciado = "Propuesta de valor ¿Qué ofrece a sus clientes en términos de productos / servicios?",
+            Opciones = new List<string> { "Productos de alta calidad", "Servicios personalizados", "Precios competitivos" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué es lo que pagan los clientes?",
+            Opciones = new List<string> { "Productos", "Servicios", "Suscripciones" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué lo diferencia de otros oferentes?",
+            Opciones = new List<string> { "Innovación", "Atención al cliente", "Experiencia del cliente" }
+        },
+        new Preguntas
+        {
+            Enunciado = "Administración de la relación ¿Qué tipo de relación construye usted con sus clientes?",
+            Opciones = new List<string> { "Personalizada", "Automatizada", "Basada en la comunidad" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Tiene usted alguna estrategia?",
+            Opciones = new List<string> { "Expandir mercado", "Diversificar productos", "Adoptar nuevas tecnologías" }
+        },
+        new Preguntas
+        {
+            Enunciado = "Canales de distribución ¿Cómo hace el cliente para adquirir el producto?",
+            Opciones = new List<string> { "Tiendas físicas", "Tiendas en línea", "Distribuidores" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿A través de qué medios?",
+            Opciones = new List<string> { "Internet", "Teléfono", "Agentes de ventas" }
+        },
+        new Preguntas
+        {
+            Enunciado = "Segmento de mercado ¿Quiénes son sus clientes?",
+            Opciones = new List<string> { "Particulares", "Empresas", "Gobierno" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Puede describir sus diferentes tipos de clientes?",
+            Opciones = new List<string> { "Jóvenes", "Adultos", "Clientes corporativos" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Cuál es la diferencia de cada segmento?",
+            Opciones = new List<string> { "Necesidades", "Comportamiento de compra", "Presupuesto" }
+        },
+        new Preguntas
+        {
+            Enunciado = "Estructura de costos ¿Cómo luce su estructura de costos?",
+            Opciones = new List<string> { "Costos fijos", "Costos variables", "Costos de personal" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Cuáles son los más importantes costos al poner en funcionamiento su empresa?",
+            Opciones = new List<string> { "Alquiler de local", "Materias primas", "Publicidad" }
+        },
+        new Preguntas
+        {
+            Enunciado = "Ingresos / Precios ¿Cuál es su estructura de ingresos?",
+            Opciones = new List<string> { "Ventas", "Comisiones", "Suscripciones" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Cómo gana dinero?",
+            Opciones = new List<string> { "Venta de productos", "Venta de servicios", "Inversiones" }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué tipo de ingresos obtiene usted?",
+            Opciones = new List<string> { "Transacciones bancarias", "Facturación directa", "Pago por crédito" }
+        }
+    };
+
+    
+    private void ResponderPregunta(Preguntas pregunta, string opcion)
+    {
+        var opcionSeleccionada = pregunta.OpcionesSeleccionadas.FirstOrDefault(o => o.Opcion == opcion);
+
+        if (opcionSeleccionada != null)
+        {
+            opcionSeleccionada.Seleccionada = true;
+        }
+        else
+        {
+            pregunta.OpcionesSeleccionadas.Add(new OpcionSeleccionada { Opcion = opcion, Seleccionada = true });
         }
     }
 
-    private void InicializarPreguntas()
+    private void SiguientePregunta()
     {
-        preguntas = new List<Preguntas_Respuestas>
+        if (preguntas[preguntaActual].OpcionesSeleccionadas.Any(o => o.Seleccionada))
         {
-            new Preguntas_Respuestas { Preguntas = "¿Tienes un plan de negocios?" },
-            new Preguntas_Respuestas { Preguntas = "¿Cuentas con el capital necesario?" },
-            new Preguntas_Respuestas { Preguntas = "¿Existe demanda para tu producto/servicio?" },
-            new Preguntas_Respuestas { Preguntas = "¿Conoces bien el mercado y la competencia?" },
-            new Preguntas_Respuestas { Preguntas = "¿Tienes habilidades y experiencia relevantes?" },
-            new Preguntas_Respuestas { Preguntas = "¿Tienes una estrategia de marketing sólida?" },
-            new Preguntas_Respuestas { Preguntas = "¿Tienes un equipo calificado?" }
-        };
-    }
-
-    private void ResponderPregunta(bool respuesta)
-    {
-        preguntas[currentQuestionIndex].Respuestas = respuesta;
-
-        // Agregar animación al cambiar de pregunta
-        currentQuestionIndex++;
-        if (currentQuestionIndex < preguntas.Count)
-        {
-            preguntas[currentQuestionIndex].Respuestas = false;
-            preguntas[currentQuestionIndex].Explicacion = string.Empty;
+            preguntaActual++;
         }
     }
 
-    private bool CalcularFactibilidadNegocio()
+    private int CalcularPorcentajeFactibilidad()
     {
-        bool todasRespuestasVerdaderas = preguntas.All(p => p.Respuestas);
-        return todasRespuestasVerdaderas;
+        int totalPreguntas = preguntas.Count;
+        int totalSeleccionadas = preguntas.Sum(p => p.OpcionesSeleccionadas.Count(o => o.Seleccionada));
+        int porcentajeFactibilidad = (totalSeleccionadas / totalPreguntas) * 100;
+
+        return porcentajeFactibilidad;
     }
 
-    private string ObtenerFactibilidadNegocio()
+    private string CalcularFactibilidadNegocio()
     {
-        return esFactible ? "factible" : "no factible";
-    }
+        int porcentajeFactibilidad = CalcularPorcentajeFactibilidad();
+        string factibilidadNegocio;
 
-    private void Reiniciar()
-    {
-        currentQuestionIndex = 0;
-        esFactible = false;
-
-        foreach (var pregunta in preguntas)
+        if (porcentajeFactibilidad == 100)
         {
-            pregunta.Respuestas = false;
-            pregunta.Explicacion = string.Empty;
+            factibilidadNegocio = "factible";
         }
+        else if (porcentajeFactibilidad >= 50)
+        {
+            factibilidadNegocio = "medianamente factible";
+        }
+        else
+        {
+            factibilidadNegocio = "no factible";
+        }
+
+        return factibilidadNegocio;
     }
 
-    private void AgregarNuevaPregunta()
+    private async Task EnviarEncuesta()
     {
-        if (!string.IsNullOrWhiteSpace(nuevaPregunta))
-        {
-            preguntas.Add(new Preguntas_Respuestas { Preguntas = nuevaPregunta });
-            nuevaPregunta = string.Empty;
-        }
-    }
-
-    private void GuardarPreguntas()
-    {
-        foreach (var pregunta in preguntas)
-        {
-            bool guardo = negocioWordBLL.Guardar(pregunta);
-        }
+        await encuestaService.GuardarRespuestas(preguntas);
     }
 }

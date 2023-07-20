@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using F_NF_Negocio.DAL;
-using F_NF_Negocio.BLL;
 using Radzen;
+using F_NF_Negocio.Servicio;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,11 +15,12 @@ options.UseSqlite(ConStr)
 );
 
 
+builder.Services.AddScoped<IEncuestaService, EncuestaService>(); // Registra el servicio EncuestaService
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-builder.Services.AddScoped<Negocio_Word_BLL>();
 builder.Services.AddScoped<NotificationService>();
 
 

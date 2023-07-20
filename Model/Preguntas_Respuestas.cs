@@ -9,13 +9,25 @@ using System.Text;
 
 namespace F_NF_Negocio.Models
 {
-    public class Preguntas_Respuestas // Entidad Articulo
+
+    public class Preguntas
     {
         [Key]
-        public int PreguntaR_ID { get; set; }
-        public string Preguntas { get; set; }
-        public bool Respuestas { get; set; }
-        public string Explicacion { get; set; }
-        public bool Estado { get; set; } = true;
+        public int PreguntaId { get; set; }
+        public string Enunciado { get; set; }
+        public List<OpcionSeleccionada> OpcionesSeleccionadas { get; set; } = new List<OpcionSeleccionada>();
+        
+        [NotMapped]
+        public List<string> Opciones { get; set; } = new List<string>();
+    }
+
+    public class OpcionSeleccionada
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Opcion { get; set; }
+        public bool Seleccionada { get; set; }
+        public int PreguntaId { get; set; }
+        public Preguntas Pregunta { get; set; }
     }
 }

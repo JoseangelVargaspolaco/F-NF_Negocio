@@ -16,27 +16,56 @@ namespace F_NF_Negocio.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.9");
 
-            modelBuilder.Entity("F_NF_Negocio.Models.Preguntas_Respuestas", b =>
+            modelBuilder.Entity("F_NF_Negocio.Models.OpcionSeleccionada", b =>
                 {
-                    b.Property<int>("PreguntaR_ID")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("Estado")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Explicacion")
+                    b.Property<string>("Opcion")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Preguntas")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("Respuestas")
+                    b.Property<int>("PreguntaId")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("PreguntaR_ID");
+                    b.Property<bool>("Seleccionada")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PreguntaId");
+
+                    b.ToTable("Respuestas");
+                });
+
+            modelBuilder.Entity("F_NF_Negocio.Models.Preguntas", b =>
+                {
+                    b.Property<int>("PreguntaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Enunciado")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("PreguntaId");
 
                     b.ToTable("Preguntas_Respuestas");
+                });
+
+            modelBuilder.Entity("F_NF_Negocio.Models.OpcionSeleccionada", b =>
+                {
+                    b.HasOne("F_NF_Negocio.Models.Preguntas", "Pregunta")
+                        .WithMany("OpcionesSeleccionadas")
+                        .HasForeignKey("PreguntaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Pregunta");
+                });
+
+            modelBuilder.Entity("F_NF_Negocio.Models.Preguntas", b =>
+                {
+                    b.Navigation("OpcionesSeleccionadas");
                 });
 #pragma warning restore 612, 618
         }
