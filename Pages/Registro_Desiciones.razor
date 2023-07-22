@@ -4,6 +4,8 @@
 @inject IJSRuntime js
 @inject SweetAlertService Swal
 
+<h3 class="border border-3 shadow card-footer text-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.1s;">Encuesta</h3>
+
 @if (preguntas.Count > 0 && preguntaActual >= 0 && preguntaActual < preguntas.Count)
 {
     <h4 class="border border-3 shadow card-footer text-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.2s;">Pregunta @(preguntaActual + 1): @preguntas[preguntaActual].Enunciado</h4>
@@ -26,7 +28,7 @@
         }
     </div>
     <br/>
-    <div class="card-footer border border-3 d-flex justify-content-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.4s;">
+    <div class="shadow card-footer border border-3 d-flex justify-content-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.4s;">
         <button class="btn btn-primary" @onclick="SiguientePregunta">Siguiente</button>
     </div>
 }
