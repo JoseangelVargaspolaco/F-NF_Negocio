@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using CurrieTechnologies.Razor.SweetAlert2;
 using F_NF_Negocio.DAL;
 using Radzen;
 using F_NF_Negocio.Servicio;
@@ -20,6 +21,7 @@ builder.Services.AddScoped<IEncuestaService, EncuestaService>(); // Registra el 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddSweetAlert2();
 
 builder.Services.AddScoped<NotificationService>();
 
@@ -42,5 +44,6 @@ app.UseRouting();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
 
 app.Run();

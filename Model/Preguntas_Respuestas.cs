@@ -19,6 +19,11 @@ namespace F_NF_Negocio.Models
         
         [NotMapped]
         public List<string> Opciones { get; set; } = new List<string>();
+
+        public Preguntas()
+        {
+            OpcionesSeleccionadas = new List<OpcionSeleccionada>();
+        }
     }
 
     public class OpcionSeleccionada
@@ -28,6 +33,7 @@ namespace F_NF_Negocio.Models
         public string Opcion { get; set; }
         public bool Seleccionada { get; set; }
         public int PreguntaId { get; set; }
+        public int Porcentaje { get; set; }
         public Preguntas Pregunta { get; set; }
     }
 }

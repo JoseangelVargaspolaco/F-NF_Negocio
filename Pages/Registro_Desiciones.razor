@@ -1,144 +1,273 @@
 ﻿@page "/"
 
-@using System.Collections.Generic
 @inject IEncuestaService encuestaService
+@inject IJSRuntime js
+@inject SweetAlertService Swal
 
-<h3 >Encuesta</h3>
-
-@if (preguntas.Count > 0 && preguntaActual < preguntas.Count)
+@if (preguntas.Count > 0 && preguntaActual >= 0 && preguntaActual < preguntas.Count)
 {
-    <h4>Pregunta @preguntaActual: @preguntas[preguntaActual].Enunciado</h4>
-    <div>
+    <h4 class="border border-3 shadow card-footer text-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.2s;">Pregunta @(preguntaActual + 1): @preguntas[preguntaActual].Enunciado</h4>
+    <br/>
+    <div Style="animation: slideInLeft 0.5s; animation-delay: 0.3s;">
         @for (int i = 0; i < preguntas[preguntaActual].Opciones.Count; i++)
         {
             var opcion = preguntas[preguntaActual].Opciones[i];
             var isSelected = preguntas[preguntaActual].OpcionesSeleccionadas.Any(o => o.Opcion == opcion && o.Seleccionada);
 
+            var inicioRespuesta = opcion.Split(',')[0];
+            var restoRespuesta = opcion.Substring(inicioRespuesta.Length);
+
             <div class="form-check">
-                <input type="radio" name="respuestaActual" value="@opcion" @onchange="() => ResponderPregunta(preguntas[preguntaActual], opcion)" checked="@isSelected" />
-                <label class="form-check-label">@opcion</label>
+                <input type="radio" name="respuestaActual" id="@($"opcion_{preguntaActual}_{i}")" value="@opcion" @onchange="() => ResponderPregunta(preguntas[preguntaActual], opcion)" checked="@isSelected" />
+                <label class="form-check-label" for="@($"opcion_{preguntaActual}_{i}")">
+                    <span>@inicioRespuesta</span>@restoRespuesta
+                </label>
             </div>
         }
     </div>
-    <hr />
-    <button class="btn btn-primary" @onclick="SiguientePregunta">Siguiente</button>
+    <br/>
+    <div class="card-footer border border-3 d-flex justify-content-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.4s;">
+        <button class="btn btn-primary" @onclick="SiguientePregunta">Siguiente</button>
+    </div>
 }
 else if (preguntaActual == preguntas.Count)
 {
-    <h4>Resultado:</h4>
-    <p>Porcentaje de factibilidad: @CalcularPorcentajeFactibilidad()%</p>
-    <p>El negocio es @CalcularFactibilidadNegocio().</p>
+    <br/>
+    <div class="text-center card-footer shadow border border-5" Style="animation: slideInLeft 0.5s; animation-delay: 0.1s;">
+        <br/>
+        <h2>Resultado</h2>
+        <br/>
+    </div>
+    <br/>
+    <div class="text-center card-footer shadow border border-5" Style="animation: slideInLeft 0.5s; animation-delay: 0.2s;">
+        <br/>
+        <h3>Porcentaje de factibilidad: @CalcularPorcentajeFactibilidad()%</h3>
+        <br/>
+    </div>
+    <br/>
+    <div class="text-center card-footer shadow border border-5" Style="animation: slideInLeft 0.5s; animation-delay: 0.3s;">
+       <br/>
+       <h3>El negocio es @CalcularFactibilidadNegocio().</h3>
+       <br/>
+    </div>
 }
-
 
 @code {
 
     private int preguntaActual = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await NotificatiónInicio();
+    } 
+
     private List<Preguntas> preguntas = new List<Preguntas>
     {
         new Preguntas
         {
             Enunciado = "¿Quienes son?",
-            Opciones = new List<string> { "Socios estratégicos", "Proveedores", "Clientes", "Empleados" }
+            Opciones = new List<string>
+            {
+                "Socios estratégicos, Empresas o individuos con los que la empresa tiene alianzas estratégicas para alcanzar objetivos comunes.",
+                "Proveedores, Entidades o personas que suministran materias primas o servicios esenciales para la operación del negocio.",
+                "Clientes, Personas u organizaciones que adquieren los productos o servicios de la empresa.",
+                "Empleados, Individuos que trabajan para la empresa y contribuyen a su funcionamiento."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Quiénes le ofrecen servicios y recursos estratégicos?",
-            Opciones = new List<string> { "Proveedores de materias primas", "Aliados estratégicos", "Inversionistas" }
+            Opciones = new List<string>
+            {
+                "Proveedores de materias primas, Entidades que suministran los insumos necesarios para la producción de bienes o servicios.",
+                "Aliados estratégicos, Empresas o individuos con los que se establecen alianzas para obtener recursos o apoyo en áreas clave.",
+                "Inversionistas, Personas o entidades que proporcionan capital financiero para el crecimiento o funcionamiento del negocio."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Qué actividades internas podrían subcontratarse para bajar costos y mejorar la calidad?",
-            Opciones = new List<string> { "Producción", "Logística", "Servicio al cliente" }
+            Opciones = new List<string>
+            {
+                "Producción, Externalizar la fabricación de productos para reducir costos de producción.",
+                "Logística, Contratar a terceros para gestionar la distribución y entrega de productos.",
+                "Servicio al cliente, Subcontratar el servicio de atención al cliente para mejorar la experiencia del cliente."
+            }
         },
         new Preguntas
         {
             Enunciado = "Actividades claves ¿Cuáles son las actividades y los procesos clave en su modelo de negocios?",
-            Opciones = new List<string> { "Investigación y desarrollo", "Producción", "Marketing y ventas", "Servicio al cliente" }
+            Opciones = new List<string>
+            {
+                "Investigación y desarrollo, Creación de nuevos productos o mejoras tecnológicas para mantenerse competitivo.",
+                "Producción, Proceso de fabricación o entrega de servicios que generan el producto final.",
+                "Marketing y ventas, Estrategias y acciones para promocionar y vender los productos o servicios.",
+                "Servicio al cliente, Brindar atención y soporte a los clientes para resolver dudas o problemas."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Cuáles son los recursos clave y más costosos en su modelo de negocios?",
-            Opciones = new List<string> { "Tecnología", "Personal calificado", "Maquinaria y equipo", "Capital" }
+            Opciones = new List<string>
+            {
+                "Tecnología, Equipos o sistemas tecnológicos necesarios para el funcionamiento del negocio.",
+                "Personal calificado, Empleados con habilidades y conocimientos específicos para llevar a cabo las actividades clave.",
+                "Maquinaria y equipo, Herramientas o maquinaria necesarias para la producción o prestación de servicios.",
+                "Capital, Fondos financieros requeridos para operar y hacer crecer el negocio."
+            }
         },
         new Preguntas
         {
             Enunciado = "Propuesta de valor ¿Qué ofrece a sus clientes en términos de productos / servicios?",
-            Opciones = new List<string> { "Productos de alta calidad", "Servicios personalizados", "Precios competitivos" }
+            Opciones = new List<string>
+            {
+                "Productos de alta calidad, Ofrecer productos con características superiores y duraderas.",
+                "Servicios personalizados, Brindar soluciones adaptadas a las necesidades específicas de cada cliente.",
+                "Precios competitivos, Establecer precios que sean atractivos para los clientes en comparación con la competencia."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Qué es lo que pagan los clientes?",
-            Opciones = new List<string> { "Productos", "Servicios", "Suscripciones" }
+            Opciones = new List<string>
+            {
+                "Productos, Pago por la compra de bienes tangibles.",
+                "Servicios, Pago por la prestación de servicios intangibles.",
+                "Suscripciones, Pago periódico por el acceso continuo a productos o servicios."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Qué lo diferencia de otros oferentes?",
-            Opciones = new List<string> { "Innovación", "Atención al cliente", "Experiencia del cliente" }
+            Opciones = new List<string>
+            {
+                "Innovación, Ofrecer productos o servicios novedosos que destacan en el mercado.",
+                "Atención al cliente, Brindar un servicio al cliente excepcional para generar lealtad.",
+                "Experiencia del cliente, Crear una experiencia positiva que supere las expectativas del cliente."
+            }
         },
         new Preguntas
         {
             Enunciado = "Administración de la relación ¿Qué tipo de relación construye usted con sus clientes?",
-            Opciones = new List<string> { "Personalizada", "Automatizada", "Basada en la comunidad" }
+            Opciones = new List<string>
+            {
+                "Personalizada, Establecer una relación cercana y personalizada con cada cliente.",
+                "Automatizada, Utilizar sistemas y herramientas automatizadas para gestionar la relación con los clientes.",
+                "Basada en la comunidad, Fomentar una comunidad en línea donde los clientes interactúan y comparten experiencias."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Tiene usted alguna estrategia?",
-            Opciones = new List<string> { "Expandir mercado", "Diversificar productos", "Adoptar nuevas tecnologías" }
+            Opciones = new List<string>
+            {
+                "Expandir mercado, Buscar nuevas oportunidades y aumentar la presencia en el mercado actual.",
+                "Diversificar productos, Ofrecer una variedad de productos o servicios para llegar a diferentes segmentos de clientes.",
+                "Adoptar nuevas tecnologías, Integrar tecnologías emergentes para mejorar la eficiencia y la experiencia del cliente."
+            }
         },
         new Preguntas
         {
             Enunciado = "Canales de distribución ¿Cómo hace el cliente para adquirir el producto?",
-            Opciones = new List<string> { "Tiendas físicas", "Tiendas en línea", "Distribuidores" }
+            Opciones = new List<string>
+            {
+                "Tiendas físicas, Comprar en establecimientos físicos de la empresa.",
+                "Tiendas en línea, Adquirir productos a través de plataformas de comercio electrónico.",
+                "Distribuidores, Comprar a través de intermediarios que distribuyen los productos a otros puntos de venta."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿A través de qué medios?",
-            Opciones = new List<string> { "Internet", "Teléfono", "Agentes de ventas" }
+            Opciones = new List<string>
+            {
+                "Internet, Realizar compras o interactuar con la empresa a través de la web.",
+                "Teléfono, Contactar a la empresa y realizar transacciones por teléfono.",
+                "Agentes de ventas, Comprar a través de representantes de ventas que visitan a los clientes."
+            }
         },
         new Preguntas
         {
             Enunciado = "Segmento de mercado ¿Quiénes son sus clientes?",
-            Opciones = new List<string> { "Particulares", "Empresas", "Gobierno" }
+            Opciones = new List<string>
+            {
+                "Particulares, Clientes individuales que compran productos o servicios para uso personal.",
+                "Empresas, Organizaciones que adquieren productos o servicios para sus operaciones o reventa.",
+                "Gobierno, Entidades gubernamentales que compran bienes o servicios para cumplir sus funciones."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Puede describir sus diferentes tipos de clientes?",
-            Opciones = new List<string> { "Jóvenes", "Adultos", "Clientes corporativos" }
+            Opciones = new List<string>
+            {
+                "Jóvenes, Segmento de clientes más jóvenes con características y preferencias específicas.",
+                "Adultos, Clientes adultos con necesidades y expectativas diferentes a otros segmentos.",
+                "Clientes corporativos, Empresas u organizaciones que son clientes del negocio y tienen requerimientos específicos."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Cuál es la diferencia de cada segmento?",
-            Opciones = new List<string> { "Necesidades", "Comportamiento de compra", "Presupuesto" }
+            Opciones = new List<string>
+            {
+                "Necesidades, Cada segmento tiene demandas y requerimientos distintos.",
+                "Comportamiento de compra, Los diferentes segmentos pueden tener hábitos de compra variados.",
+                "Presupuesto, Los segmentos pueden estar dispuestos a gastar diferentes cantidades de dinero."
+            }
         },
         new Preguntas
         {
             Enunciado = "Estructura de costos ¿Cómo luce su estructura de costos?",
-            Opciones = new List<string> { "Costos fijos", "Costos variables", "Costos de personal" }
+            Opciones = new List<string>
+            {
+                "Costos fijos, Gastos que no varían con la producción o ventas, como alquiler y salarios.",
+                "Costos variables, Gastos que cambian proporcionalmente con la producción o ventas, como materias primas.",
+                "Costos de personal, Gastos relacionados con los sueldos y beneficios para los empleados."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Cuáles son los más importantes costos al poner en funcionamiento su empresa?",
-            Opciones = new List<string> { "Alquiler de local", "Materias primas", "Publicidad" }
+            Opciones = new List<string>
+            {
+                "Alquiler de local, Costo para tener un espacio físico donde operar el negocio.",
+                "Materias primas, Gastos para adquirir los insumos necesarios para la producción de bienes.",
+                "Publicidad, Inversión en promoción y marketing para dar a conocer el negocio y atraer clientes."
+            }
         },
         new Preguntas
         {
             Enunciado = "Ingresos / Precios ¿Cuál es su estructura de ingresos?",
-            Opciones = new List<string> { "Ventas", "Comisiones", "Suscripciones" }
+            Opciones = new List<string>
+            {
+                "Ventas, Ingresos generados por la venta de productos o servicios.",
+                "Comisiones, Ingresos obtenidos a través de comisiones por intermediación o ventas.",
+                "Suscripciones, Ingresos periódicos por membresías o acceso continuo a productos o servicios."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Cómo gana dinero?",
-            Opciones = new List<string> { "Venta de productos", "Venta de servicios", "Inversiones" }
+            Opciones = new List<string>
+            {
+                "Venta de productos, Obtener ingresos mediante la comercialización de bienes tangibles.",
+                "Venta de servicios, Generar ingresos al proporcionar servicios intangibles a los clientes.",
+                "Inversiones, Obtener beneficios a través de inversiones financieras."
+            }
         },
         new Preguntas
         {
             Enunciado = "¿Qué tipo de ingresos obtiene usted?",
-            Opciones = new List<string> { "Transacciones bancarias", "Facturación directa", "Pago por crédito" }
+            Opciones = new List<string>
+            {
+                "Transacciones bancarias, Ingresos provenientes de pagos y transacciones realizadas por los clientes.",
+                "Facturación directa, Obtener ingresos directamente a través de la emisión de facturas por productos o servicios.",
+                "Pago por crédito, Recibir ingresos a través de pagos diferidos o financiamiento para los clientes."
+            }
         }
     };
 
-    
     private void ResponderPregunta(Preguntas pregunta, string opcion)
     {
         var opcionSeleccionada = pregunta.OpcionesSeleccionadas.FirstOrDefault(o => o.Opcion == opcion);
@@ -146,53 +275,91 @@ else if (preguntaActual == preguntas.Count)
         if (opcionSeleccionada != null)
         {
             opcionSeleccionada.Seleccionada = true;
+            opcionSeleccionada.Porcentaje = pregunta.Opciones.Count - pregunta.Opciones.IndexOf(opcion) - 1;
         }
         else
         {
-            pregunta.OpcionesSeleccionadas.Add(new OpcionSeleccionada { Opcion = opcion, Seleccionada = true });
+            pregunta.OpcionesSeleccionadas.Add(new OpcionSeleccionada { Opcion = opcion, Seleccionada = true, Porcentaje = pregunta.Opciones.Count - pregunta.Opciones.IndexOf(opcion) - 1 });
         }
     }
 
-    private void SiguientePregunta()
+    private async Task SiguientePregunta()
     {
         if (preguntas[preguntaActual].OpcionesSeleccionadas.Any(o => o.Seleccionada))
         {
             preguntaActual++;
+            await GuardarEncuesta();
+        }else{
+            await js.MostrarMensaje("Selecciona una respuesta", "Pulsa sobre una respuesta para poder seguir con la encuesta", TipoMensajeSweetAlert.warning);
         }
     }
 
-    private int CalcularPorcentajeFactibilidad()
+    private double CalcularPorcentajeFactibilidad()
     {
         int totalPreguntas = preguntas.Count;
-        int totalSeleccionadas = preguntas.Sum(p => p.OpcionesSeleccionadas.Count(o => o.Seleccionada));
-        int porcentajeFactibilidad = (totalSeleccionadas / totalPreguntas) * 100;
+        double totalSeleccionadas = 0;
+
+        foreach (Preguntas pregunta in preguntas)
+        {
+            int porcentajeMayor = 0;
+
+            foreach (OpcionSeleccionada opcionSeleccionada in pregunta.OpcionesSeleccionadas)
+            {
+                if (opcionSeleccionada.Seleccionada)
+                {
+                    if (opcionSeleccionada.Porcentaje > porcentajeMayor)
+                    {
+                        porcentajeMayor = opcionSeleccionada.Porcentaje;
+                    }
+                }
+            }
+
+            totalSeleccionadas += porcentajeMayor;
+        }
+
+        double porcentajeFactibilidad = (totalSeleccionadas / (preguntas.Count * (preguntas[0].Opciones.Count - 1))) * 100;
 
         return porcentajeFactibilidad;
     }
 
     private string CalcularFactibilidadNegocio()
     {
-        int porcentajeFactibilidad = CalcularPorcentajeFactibilidad();
+        double porcentajeFactibilidad = CalcularPorcentajeFactibilidad();
         string factibilidadNegocio;
 
-        if (porcentajeFactibilidad == 100)
+        if (porcentajeFactibilidad >= 75)
         {
             factibilidadNegocio = "factible";
+            js.MostrarMensaje("El negocio es factible", "Su negocio esta duro duro. Meta mano de una vez.", TipoMensajeSweetAlert.success);
+
         }
         else if (porcentajeFactibilidad >= 50)
         {
             factibilidadNegocio = "medianamente factible";
+            js.MostrarMensaje("El negocio es medianammente factible", "Buneo manito, esta desente su idea pero tiene que ponerse a investigar mas para que no lo tumben.", TipoMensajeSweetAlert.warning);
         }
         else
         {
             factibilidadNegocio = "no factible";
+            js.MostrarMensaje("El negocio no es factible", "Buneo manito, su negocio lo veo feo para la foto y no veo que sea factible.", TipoMensajeSweetAlert.error);
         }
 
         return factibilidadNegocio;
     }
 
-    private async Task EnviarEncuesta()
+
+    //Partes adicionales
+    private async Task GuardarEncuesta()
     {
-        await encuestaService.GuardarRespuestas(preguntas);
+        try{
+            await encuestaService.GuardarRespuestas(preguntas);
+        }catch(Exception excepcion){}
+    }
+
+    private async Task NotificatiónInicio()
+    {
+        try{
+            await js.MostrarMensaje("¡Bienvenido!", "Realizaras una encuesta para verificar si tu negocio es factible o no. Presiona el boton 'OK' para iniciar.", TipoMensajeSweetAlert.info);
+        }catch(Exception execption){}
     }
 }
