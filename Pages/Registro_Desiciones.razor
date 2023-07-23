@@ -4,271 +4,89 @@
 @inject IJSRuntime js
 @inject SweetAlertService Swal
 
-<h3 class="border border-3 shadow card-footer text-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.1s;">Encuesta</h3>
+<div class="card component border border-3 shadow" style="animation: slideInLeft 0.5s; animation-delay: 0.1s;">
+    @if (preguntas.Count > 0 && preguntaActual >= 0 && preguntaActual < preguntas.Count)
+    {
+        <h3 class="component border border-3 shadow card-footer text-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.1s;">Encuesta</h3>
+        <h4 class="border border-3 shadow card-footer text-center component" Style="animation: slideInLeft 0.5s; animation-delay: 0.2s;">Pregunta @(preguntaActual + 1): @preguntas[preguntaActual].Enunciado</h4>
+        <br/>
+        <div Style="animation: slideInLeft 0.5s; animation-delay: 0.3s;">
+            @for (int i = 0; i < preguntas[preguntaActual].Opciones.Count; i++)
+            {
+                var opcion = preguntas[preguntaActual].Opciones[i];
+                var isSelected = preguntas[preguntaActual].OpcionesSeleccionadas.Any(o => o.Opcion == opcion && o.Seleccionada);
+                var inicioRespuesta = opcion.Split(',')[0];
+                var restoRespuesta = opcion.Substring(inicioRespuesta.Length);
 
-@if (preguntas.Count > 0 && preguntaActual >= 0 && preguntaActual < preguntas.Count)
-{
-    <h4 class="border border-3 shadow card-footer text-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.2s;">Pregunta @(preguntaActual + 1): @preguntas[preguntaActual].Enunciado</h4>
-    <br/>
-    <div Style="animation: slideInLeft 0.5s; animation-delay: 0.3s;">
-        @for (int i = 0; i < preguntas[preguntaActual].Opciones.Count; i++)
-        {
-            var opcion = preguntas[preguntaActual].Opciones[i];
-            var isSelected = preguntas[preguntaActual].OpcionesSeleccionadas.Any(o => o.Opcion == opcion && o.Seleccionada);
 
-            var inicioRespuesta = opcion.Split(',')[0];
-            var restoRespuesta = opcion.Substring(inicioRespuesta.Length);
-
-            <div class="form-check">
-                <input type="radio" name="respuestaActual" id="@($"opcion_{preguntaActual}_{i}")" value="@opcion" @onchange="() => ResponderPregunta(preguntas[preguntaActual], opcion)" checked="@isSelected" />
-                <label class="form-check-label" for="@($"opcion_{preguntaActual}_{i}")">
-                    <span>@inicioRespuesta</span>@restoRespuesta
+                <label class="form-check-label container">
+                    <input type="radio" name="respuestaActual" id="@($"opcion_{preguntaActual}_{i}")" class="form-check-input @((isSelected) ? "checkbox-border-purple" : "")" value="@opcion" @onchange="() => ResponderPregunta(preguntas[preguntaActual], opcion)" checked="@isSelected" />
+                    <label class="form-check-label" for="@($"opcion_{preguntaActual}_{i}")">
+                        <span style="font-weight: bold; color: black;">@inicioRespuesta</span>@restoRespuesta
+                    </label>
                 </label>
+            }
+        </div>
+        <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Wrap="FlexWrap.Wrap">
+                <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="valorProgreso"/>
+            </RadzenStack>
+        </RadzenStack>
+        <br/>
+        <div class="shadow card-footer border border-3 d-flex justify-content-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.4s;">
+            <button class="btn btn-success" @onclick="SiguientePregunta">Siguiente</button>
+        </div>
+    }
+    else if (preguntaActual == preguntas.Count)
+    {
+        <br/>
+        <div class="text-center card-footer shadow border border-5" Style="animation: slideInLeft 0.5s; animation-delay: 0.1s;">
+            <br/>
+            <h2>Resultado</h2>
+            <br/>
+        </div>
+        <br/>
+        <div class="text-center card-footer shadow border border-5" Style="animation: slideInLeft 0.5s; animation-delay: 0.2s;">
+            <br/>
+            <h3>Porcentaje de factibilidad: @CalcularPorcentajeFactibilidad()%</h3>
+            <br/>
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" aria-label="Example with label" style="width:@CalcularPorcentajeFactibilidad()%;" aria-valuenow="@CalcularPorcentajeFactibilidad()" aria-valuemin="0" aria-valuemax="100">@CalcularPorcentajeFactibilidad()%</div>
             </div>
-        }
-    </div>
-    <br/>
-    <div class="shadow card-footer border border-3 d-flex justify-content-center" Style="animation: slideInLeft 0.5s; animation-delay: 0.4s;">
-        <button class="btn btn-primary" @onclick="SiguientePregunta">Siguiente</button>
-    </div>
-}
-else if (preguntaActual == preguntas.Count)
-{
-    <br/>
-    <div class="text-center card-footer shadow border border-5" Style="animation: slideInLeft 0.5s; animation-delay: 0.1s;">
+        </div>
         <br/>
-        <h2>Resultado</h2>
+        <div class="text-center card-footer shadow border border-5" Style="animation: slideInLeft 0.5s; animation-delay: 0.3s;">
         <br/>
-    </div>
-    <br/>
-    <div class="text-center card-footer shadow border border-5" Style="animation: slideInLeft 0.5s; animation-delay: 0.2s;">
+        <h3>El negocio es @CalcularFactibilidadNegocio().</h3>
         <br/>
-        <h3>Porcentaje de factibilidad: @CalcularPorcentajeFactibilidad()%</h3>
-        <br/>
-    </div>
-    <br/>
-    <div class="text-center card-footer shadow border border-5" Style="animation: slideInLeft 0.5s; animation-delay: 0.3s;">
-       <br/>
-       <h3>El negocio es @CalcularFactibilidadNegocio().</h3>
-       <br/>
-    </div>
-}
+        </div>
+    }
+</div>
+
+@*S cr*@
+<style>
+    .container {
+        display: flex;
+        margin-left: 20px;
+        justify-content: flex-start;
+        gap: 20px; 
+    }
+    .checkbox-animation {
+        transition: background-color 0.3s ease;
+        border: 2px solid #9c27b0;
+    }
+</style>
 
 @code {
 
     private int preguntaActual = 0;
+    double valorProgreso = 0;
+    int totalPreguntas = 20;
 
     protected override async Task OnInitializedAsync()
     {
         await NotificatiónInicio();
     } 
-
-    private List<Preguntas> preguntas = new List<Preguntas>
-    {
-        new Preguntas
-        {
-            Enunciado = "¿Quienes son?",
-            Opciones = new List<string>
-            {
-                "Socios estratégicos, Empresas o individuos con los que la empresa tiene alianzas estratégicas para alcanzar objetivos comunes.",
-                "Proveedores, Entidades o personas que suministran materias primas o servicios esenciales para la operación del negocio.",
-                "Clientes, Personas u organizaciones que adquieren los productos o servicios de la empresa.",
-                "Empleados, Individuos que trabajan para la empresa y contribuyen a su funcionamiento."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Quiénes le ofrecen servicios y recursos estratégicos?",
-            Opciones = new List<string>
-            {
-                "Proveedores de materias primas, Entidades que suministran los insumos necesarios para la producción de bienes o servicios.",
-                "Aliados estratégicos, Empresas o individuos con los que se establecen alianzas para obtener recursos o apoyo en áreas clave.",
-                "Inversionistas, Personas o entidades que proporcionan capital financiero para el crecimiento o funcionamiento del negocio."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Qué actividades internas podrían subcontratarse para bajar costos y mejorar la calidad?",
-            Opciones = new List<string>
-            {
-                "Producción, Externalizar la fabricación de productos para reducir costos de producción.",
-                "Logística, Contratar a terceros para gestionar la distribución y entrega de productos.",
-                "Servicio al cliente, Subcontratar el servicio de atención al cliente para mejorar la experiencia del cliente."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "Actividades claves ¿Cuáles son las actividades y los procesos clave en su modelo de negocios?",
-            Opciones = new List<string>
-            {
-                "Investigación y desarrollo, Creación de nuevos productos o mejoras tecnológicas para mantenerse competitivo.",
-                "Producción, Proceso de fabricación o entrega de servicios que generan el producto final.",
-                "Marketing y ventas, Estrategias y acciones para promocionar y vender los productos o servicios.",
-                "Servicio al cliente, Brindar atención y soporte a los clientes para resolver dudas o problemas."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Cuáles son los recursos clave y más costosos en su modelo de negocios?",
-            Opciones = new List<string>
-            {
-                "Tecnología, Equipos o sistemas tecnológicos necesarios para el funcionamiento del negocio.",
-                "Personal calificado, Empleados con habilidades y conocimientos específicos para llevar a cabo las actividades clave.",
-                "Maquinaria y equipo, Herramientas o maquinaria necesarias para la producción o prestación de servicios.",
-                "Capital, Fondos financieros requeridos para operar y hacer crecer el negocio."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "Propuesta de valor ¿Qué ofrece a sus clientes en términos de productos / servicios?",
-            Opciones = new List<string>
-            {
-                "Productos de alta calidad, Ofrecer productos con características superiores y duraderas.",
-                "Servicios personalizados, Brindar soluciones adaptadas a las necesidades específicas de cada cliente.",
-                "Precios competitivos, Establecer precios que sean atractivos para los clientes en comparación con la competencia."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Qué es lo que pagan los clientes?",
-            Opciones = new List<string>
-            {
-                "Productos, Pago por la compra de bienes tangibles.",
-                "Servicios, Pago por la prestación de servicios intangibles.",
-                "Suscripciones, Pago periódico por el acceso continuo a productos o servicios."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Qué lo diferencia de otros oferentes?",
-            Opciones = new List<string>
-            {
-                "Innovación, Ofrecer productos o servicios novedosos que destacan en el mercado.",
-                "Atención al cliente, Brindar un servicio al cliente excepcional para generar lealtad.",
-                "Experiencia del cliente, Crear una experiencia positiva que supere las expectativas del cliente."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "Administración de la relación ¿Qué tipo de relación construye usted con sus clientes?",
-            Opciones = new List<string>
-            {
-                "Personalizada, Establecer una relación cercana y personalizada con cada cliente.",
-                "Automatizada, Utilizar sistemas y herramientas automatizadas para gestionar la relación con los clientes.",
-                "Basada en la comunidad, Fomentar una comunidad en línea donde los clientes interactúan y comparten experiencias."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Tiene usted alguna estrategia?",
-            Opciones = new List<string>
-            {
-                "Expandir mercado, Buscar nuevas oportunidades y aumentar la presencia en el mercado actual.",
-                "Diversificar productos, Ofrecer una variedad de productos o servicios para llegar a diferentes segmentos de clientes.",
-                "Adoptar nuevas tecnologías, Integrar tecnologías emergentes para mejorar la eficiencia y la experiencia del cliente."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "Canales de distribución ¿Cómo hace el cliente para adquirir el producto?",
-            Opciones = new List<string>
-            {
-                "Tiendas físicas, Comprar en establecimientos físicos de la empresa.",
-                "Tiendas en línea, Adquirir productos a través de plataformas de comercio electrónico.",
-                "Distribuidores, Comprar a través de intermediarios que distribuyen los productos a otros puntos de venta."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿A través de qué medios?",
-            Opciones = new List<string>
-            {
-                "Internet, Realizar compras o interactuar con la empresa a través de la web.",
-                "Teléfono, Contactar a la empresa y realizar transacciones por teléfono.",
-                "Agentes de ventas, Comprar a través de representantes de ventas que visitan a los clientes."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "Segmento de mercado ¿Quiénes son sus clientes?",
-            Opciones = new List<string>
-            {
-                "Particulares, Clientes individuales que compran productos o servicios para uso personal.",
-                "Empresas, Organizaciones que adquieren productos o servicios para sus operaciones o reventa.",
-                "Gobierno, Entidades gubernamentales que compran bienes o servicios para cumplir sus funciones."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Puede describir sus diferentes tipos de clientes?",
-            Opciones = new List<string>
-            {
-                "Jóvenes, Segmento de clientes más jóvenes con características y preferencias específicas.",
-                "Adultos, Clientes adultos con necesidades y expectativas diferentes a otros segmentos.",
-                "Clientes corporativos, Empresas u organizaciones que son clientes del negocio y tienen requerimientos específicos."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Cuál es la diferencia de cada segmento?",
-            Opciones = new List<string>
-            {
-                "Necesidades, Cada segmento tiene demandas y requerimientos distintos.",
-                "Comportamiento de compra, Los diferentes segmentos pueden tener hábitos de compra variados.",
-                "Presupuesto, Los segmentos pueden estar dispuestos a gastar diferentes cantidades de dinero."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "Estructura de costos ¿Cómo luce su estructura de costos?",
-            Opciones = new List<string>
-            {
-                "Costos fijos, Gastos que no varían con la producción o ventas, como alquiler y salarios.",
-                "Costos variables, Gastos que cambian proporcionalmente con la producción o ventas, como materias primas.",
-                "Costos de personal, Gastos relacionados con los sueldos y beneficios para los empleados."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Cuáles son los más importantes costos al poner en funcionamiento su empresa?",
-            Opciones = new List<string>
-            {
-                "Alquiler de local, Costo para tener un espacio físico donde operar el negocio.",
-                "Materias primas, Gastos para adquirir los insumos necesarios para la producción de bienes.",
-                "Publicidad, Inversión en promoción y marketing para dar a conocer el negocio y atraer clientes."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "Ingresos / Precios ¿Cuál es su estructura de ingresos?",
-            Opciones = new List<string>
-            {
-                "Ventas, Ingresos generados por la venta de productos o servicios.",
-                "Comisiones, Ingresos obtenidos a través de comisiones por intermediación o ventas.",
-                "Suscripciones, Ingresos periódicos por membresías o acceso continuo a productos o servicios."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Cómo gana dinero?",
-            Opciones = new List<string>
-            {
-                "Venta de productos, Obtener ingresos mediante la comercialización de bienes tangibles.",
-                "Venta de servicios, Generar ingresos al proporcionar servicios intangibles a los clientes.",
-                "Inversiones, Obtener beneficios a través de inversiones financieras."
-            }
-        },
-        new Preguntas
-        {
-            Enunciado = "¿Qué tipo de ingresos obtiene usted?",
-            Opciones = new List<string>
-            {
-                "Transacciones bancarias, Ingresos provenientes de pagos y transacciones realizadas por los clientes.",
-                "Facturación directa, Obtener ingresos directamente a través de la emisión de facturas por productos o servicios.",
-                "Pago por crédito, Recibir ingresos a través de pagos diferidos o financiamiento para los clientes."
-            }
-        }
-    };
 
     private void ResponderPregunta(Preguntas pregunta, string opcion)
     {
@@ -285,13 +103,246 @@ else if (preguntaActual == preguntas.Count)
         }
     }
 
+    private List<Preguntas> preguntas = new List<Preguntas>
+    {
+        new Preguntas
+        {
+            Enunciado = "¿Cuáles serían tus principales competidores en el mercado local?",
+            Opciones = new List<string>
+            {
+                "Otras ferreterías establecidas, que ya cuentan con una base de clientes.",
+                "Grandes cadenas de ferreterías, con mayor alcance y capacidad de compra.",
+                "Tiendas de mejoras para el hogar, que ofrecen una amplia gama de productos similares.",
+                "Vendedores en línea, que pueden competir en precios y comodidad."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué productos específicos consideras esenciales para ofrecer en tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Herramientas manuales, como martillos, destornilladores y alicates.",
+                "Materiales de construcción, como cemento, ladrillos y arena.",
+                "Pinturas y acabados, para proyectos de decoración y mantenimiento.",
+                "Artículos de plomería y electricidad, como tuberías y cables eléctricos."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Cómo planificas atraer a nuevos clientes a tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Publicidad local, mediante volantes, anuncios en periódicos o radio.",
+                "Presencia en línea, con un sitio web y redes sociales para llegar a clientes digitales.",
+                "Descuentos y promociones especiales para clientes nuevos.",
+                "Participación en eventos comunitarios y ferias locales."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué estrategias utilizarías para fidelizar a tus clientes actuales?",
+            Opciones = new List<string>
+            {
+                "Programa de lealtad, ofreciendo recompensas y descuentos a clientes frecuentes.",
+                "Atención al cliente excepcional, brindando asesoramiento experto y soluciones personalizadas.",
+                "Enviar boletines y correos electrónicos con ofertas especiales y novedades.",
+                "Organizar eventos exclusivos y capacitaciones para clientes habituales."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué canales de distribución utilizarías para vender tus productos?",
+            Opciones = new List<string>
+            {
+                "Tienda física, ofreciendo una experiencia de compra personalizada y asesoramiento en el lugar.",
+                "Tienda en línea, para llegar a clientes que prefieren comprar desde casa.",
+                "Distribuidores locales, para ampliar la presencia de tus productos en otras tiendas.",
+                "Venta a contratistas y empresas de construcción, que compran a granel para proyectos."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué métodos de pago ofrecerías a tus clientes?",
+            Opciones = new List<string>
+            {
+                "Efectivo, aceptando pagos en efectivo en la tienda.",
+                "Tarjetas de crédito y débito, para mayor comodidad y opciones de pago.",
+                "Pago móvil, permitiendo transacciones a través de dispositivos móviles.",
+                "Crédito para clientes frecuentes y empresas, con opciones de pago a plazos."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué estrategias emplearías para gestionar tu inventario?",
+            Opciones = new List<string>
+            {
+                "Sistema de inventario automatizado, que registre las existencias y genere alertas de reposición.",
+                "Realizar inventarios físicos periódicos para verificar las existencias.",
+                "Establecer acuerdos de suministro con proveedores para garantizar disponibilidad de productos.",
+                "Aplicar técnicas de gestión de inventario ABC para enfocarse en los productos más vendidos."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Cómo te asegurarías de mantener una variedad de productos para satisfacer las necesidades de los clientes?",
+            Opciones = new List<string>
+            {
+                "Realizar análisis de mercado para identificar tendencias y demandas del cliente.",
+                "Establecer alianzas con proveedores que ofrezcan una amplia gama de productos.",
+                "Estar atento a las sugerencias y peticiones de los clientes para ampliar el inventario.",
+                "Realizar encuestas a los clientes para conocer sus preferencias y necesidades."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué estrategias utilizarías para ofrecer precios competitivos?",
+            Opciones = new List<string>
+            {
+                "Negociar con proveedores para obtener mejores condiciones de compra.",
+                "Comparar los precios de la competencia para ajustar tus precios.",
+                "Ofrecer descuentos por volumen de compra o promociones por tiempo limitado.",
+                "Implementar una política de precios bajos y garantía de igualación de precios."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué medidas de seguridad implementarías en tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Sistemas de cámaras de seguridad para monitorear la tienda y prevenir robos.",
+                "Entrenar al personal en medidas de seguridad y prevención de pérdidas.",
+                "Utilizar etiquetas de seguridad y sistemas antihurto para proteger productos.",
+                "Instalar alarmas y sistemas de acceso controlado para proteger áreas restringidas."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué estrategias utilizarías para mejorar la eficiencia y productividad de tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Capacitación constante para el personal en habilidades de ventas y servicio al cliente.",
+                "Automatizar procesos, como el registro de ventas y gestión de inventario.",
+                "Establecer metas y objetivos claros para el personal y reconocer su desempeño.",
+                "Realizar análisis de datos para identificar oportunidades de mejora en la operación."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué servicios adicionales ofrecerías para agregar valor a tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Servicio de entrega a domicilio para clientes que compran productos pesados o voluminosos.",
+                "Asesoría técnica para clientes que requieren orientación en proyectos específicos.",
+                "Servicios de corte y ajuste de materiales para adaptarlos a las necesidades de los clientes.",
+                "Organización de talleres y capacitaciones para brindar conocimientos útiles a los clientes."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Cómo te asegurarías de mantener un buen nivel de inventario sin excedentes?",
+            Opciones = new List<string>
+            {
+                "Realizar un seguimiento continuo de las ventas para ajustar los pedidos a la demanda.",
+                "Negociar plazos flexibles con proveedores para recibir entregas según las necesidades.",
+                "Establecer un sistema de rotación de inventario para dar prioridad a los productos más antiguos.",
+                "Ofrecer descuentos y promociones en productos con exceso de inventario para estimular su venta."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué estrategias utilizarías para atraer a clientes profesionales, como contratistas y constructores?",
+            Opciones = new List<string>
+            {
+                "Ofrecer precios especiales y descuentos por volumen de compra.",
+                "Proporcionar un servicio de atención rápida y personalizada para proyectos.",
+                "Mantener un inventario amplio y variado para satisfacer las necesidades de construcción.",
+                "Participar en eventos y ferias comerciales donde se reúnen clientes profesionales."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué factores considerarías al seleccionar proveedores para tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Calidad de los productos y servicios ofrecidos por el proveedor.",
+                "Capacidad del proveedor para cumplir con los plazos de entrega.",
+                "Políticas de devolución y garantía ofrecidas por el proveedor.",
+                "Precios competitivos y términos de pago favorables."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué estrategias utilizarías para promocionar tu ferretería en línea?",
+            Opciones = new List<string>
+            {
+                "Crear un sitio web atractivo y fácil de navegar con información completa de productos.",
+                "Utilizar estrategias de SEO para mejorar el posicionamiento en motores de búsqueda.",
+                "Publicar contenido relevante en redes sociales y promover ofertas exclusivas.",
+                "Invertir en publicidad en línea, como anuncios en Google o redes sociales."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué acciones emprenderías para fomentar una cultura de atención al cliente en tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Capacitar al personal en técnicas de servicio al cliente y resolución de problemas.",
+                "Fomentar la empatía y el trato amable hacia los clientes en todas las interacciones.",
+                "Establecer un sistema de retroalimentación para evaluar la satisfacción del cliente.",
+                "Reconocer y premiar a los empleados que brindan un servicio excepcional."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Cómo te asegurarías de cumplir con las normativas y regulaciones en la operación de tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Investigar y conocer las leyes y regulaciones aplicables al sector de ferreterías.",
+                "Establecer procedimientos internos para garantizar el cumplimiento de las normativas.",
+                "Mantener registros y documentación actualizada para demostrar el cumplimiento.",
+                "Contratar asesoría legal o contable para asegurarte de estar al día con las obligaciones."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Qué acciones emprenderías para fomentar una cultura de atención al cliente en tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Capacitar al personal en técnicas de servicio al cliente y resolución de problemas.",
+                "Fomentar la empatía y el trato amable hacia los clientes en todas las interacciones.",
+                "Establecer un sistema de retroalimentación para evaluar la satisfacción del cliente.",
+                "Reconocer y premiar a los empleados que brindan un servicio excepcional."
+            }
+        },
+        new Preguntas
+        {
+            Enunciado = "¿Cómo te asegurarías de cumplir con las normativas y regulaciones en la operación de tu ferretería?",
+            Opciones = new List<string>
+            {
+                "Investigar y conocer las leyes y regulaciones aplicables al sector de ferreterías.",
+                "Establecer procedimientos internos para garantizar el cumplimiento de las normativas.",
+                "Mantener registros y documentación actualizada para demostrar el cumplimiento.",
+                "Contratar asesoría legal o contable para asegurarte de estar al día con las obligaciones."
+            }
+        }
+    };
+
     private async Task SiguientePregunta()
     {
         if (preguntas[preguntaActual].OpcionesSeleccionadas.Any(o => o.Seleccionada))
         {
             preguntaActual++;
+
+            // Lógica para calcular el progreso actual
+            valorProgreso = (double)preguntaActual / totalPreguntas * 100;
+
+            // Redondear el valorProgreso a un número entero
+            valorProgreso = Math.Round(valorProgreso);
+
             await GuardarEncuesta();
-        }else{
+        }
+        else
+        {
             await js.MostrarMensaje("Selecciona una respuesta", "Pulsa sobre una respuesta para poder seguir con la encuesta", TipoMensajeSweetAlert.warning);
         }
     }
@@ -320,8 +371,9 @@ else if (preguntaActual == preguntas.Count)
         }
 
         double porcentajeFactibilidad = (totalSeleccionadas / (preguntas.Count * (preguntas[0].Opciones.Count - 1))) * 100;
+        int porcentajeEntero = (int)Math.Floor(porcentajeFactibilidad);
 
-        return porcentajeFactibilidad;
+        return porcentajeEntero;
     }
 
     private string CalcularFactibilidadNegocio()

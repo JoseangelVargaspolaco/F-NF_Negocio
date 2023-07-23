@@ -6,6 +6,7 @@ using CurrieTechnologies.Razor.SweetAlert2;
 using F_NF_Negocio.DAL;
 using Radzen;
 using F_NF_Negocio.Servicio;
+using BlazorStrap;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ builder.Services.AddScoped<IEncuestaService, EncuestaService>(); // Registra el 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSweetAlert2();
+builder.Services.AddBlazorStrap();
 
 builder.Services.AddScoped<NotificationService>();
 
